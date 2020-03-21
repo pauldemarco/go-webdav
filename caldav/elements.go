@@ -60,6 +60,12 @@ type calendarQuery struct {
 	// TODO: timezone
 }
 
+// https://tools.ietf.org/html/rfc4791#section-7.10
+type freeBusyQuery struct {
+	XMLName   xml.Name   `xml:"urn:ietf:params:xml:ns:caldav free-busy-query"`
+	TimeRange *timeRange `xml:"time-range,omitempty"`
+}
+
 // https://tools.ietf.org/html/rfc4791#section-9.7
 type filter struct {
 	XMLName    xml.Name   `xml:"urn:ietf:params:xml:ns:caldav filter"`

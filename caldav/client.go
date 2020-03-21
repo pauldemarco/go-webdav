@@ -223,6 +223,43 @@ func (c *Client) QueryCalendar(calendar string, query *CalendarQuery) ([]Calenda
 	return decodeCalendarObjectList(ms)
 }
 
+func (c *Client) QueryFreeBusy(calendar string, query *FreeBusyQuery) (*CalendarObject, error) {
+	filter := *encodeCompFilter(&query.CompFilter)
+	freeBusyQuery := freeBusyQuery{TimeRange: filter.TimeRange}
+	req, err := c.ic.NewXMLRequest("REPORT", calendar, &freeBusyQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.ic.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	mediaType, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+	if err != nil {
+		return nil, err
+	}
+	if !strings.EqualFold(mediaType, ical.MIMEType) {
+		return nil, fmt.Errorf("caldav: expected Content-Type %q, got %q", ical.MIMEType, mediaType)
+	}
+
+	cal, err := ical.NewDecoder(resp.Body).Decode()
+	if err != nil {
+		return nil, err
+	}
+
+	co := &CalendarObject{
+		Path: resp.Request.URL.Path,
+		Data: cal,
+	}
+	if err := populateCalendarObject(co, resp); err != nil {
+		return nil, err
+	}
+	return co, nil
+}
+
 func populateCalendarObject(co *CalendarObject, resp *http.Response) error {
 	if loc := resp.Header.Get("Location"); loc != "" {
 		u, err := url.Parse(loc)

@@ -54,3 +54,7 @@ type CalendarObject struct {
 	ETag    string
 	Data    *ical.Calendar
 }
+
+type FreeBusyQuery struct {
+	CompFilter CompFilter
+}
