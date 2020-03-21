@@ -129,13 +129,19 @@ func encodeCalendarCompReq(c *CalendarCompRequest) (*comp, error) {
 	return &encoded, nil
 }
 
-func encodeCalendarReq(c *CalendarCompRequest) (*internal.Prop, error) {
+func encodeCalendarReq(c *CalendarCompRequest, f *CompFilter) (*internal.Prop, error) {
 	compReq, err := encodeCalendarCompReq(c)
 	if err != nil {
 		return nil, err
 	}
 
 	calDataReq := calendarDataReq{Comp: compReq}
+	if f.Expand {
+		calDataReq.Expand = &expand{
+			Start: dateWithUTCTime(f.Start),
+			End:   dateWithUTCTime(f.End),
+		}
+	}
 
 	getLastModReq := internal.NewRawXMLElement(internal.GetLastModifiedName, nil, nil)
 	getETagReq := internal.NewRawXMLElement(internal.GetETagName, nil, nil)
@@ -197,7 +203,7 @@ func decodeCalendarObjectList(ms *internal.Multistatus) ([]CalendarObject, error
 }
 
 func (c *Client) QueryCalendar(calendar string, query *CalendarQuery) ([]CalendarObject, error) {
-	propReq, err := encodeCalendarReq(&query.CompRequest)
+	propReq, err := encodeCalendarReq(&query.CompRequest, &query.CompFilter)
 	if err != nil {
 		return nil, err
 	}

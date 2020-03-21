@@ -31,6 +31,7 @@ type CompFilter struct {
 	Start, End time.Time
 	Props      []PropFilter
 	Comps      []CompFilter
+	Expand     bool
 }
 
 type PropFilter struct {
